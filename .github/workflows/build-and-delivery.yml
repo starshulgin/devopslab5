@@ -1,13 +1,18 @@
 name: Build and Delivery
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - Test Python App
     branches:
       - main
+    types:
+      - completed
 
 jobs:
-  build-and-push:
+  cd:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -15,11 +20,11 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/devops-lab5:latest
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/my-app:latest
